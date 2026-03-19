@@ -1293,8 +1293,8 @@ select, option{
         <!-- Синю полоску прибрано. Кнопки < > для скролу flyout -->
         <div id="flyoutScrollbarWrap" style="display:none!important"></div>
         <div id="flyoutNavBtns" style="display:none;position:absolute;bottom:78px;left:0;right:0;pointer-events:none;z-index:55;">
-            <button id="flyoutNavL" style="pointer-events:auto;position:absolute;left:6px;bottom:0;width:36px;height:44px;background:rgba(10,15,30,.75);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:rgba(255,255,255,.9);font-size:22px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(6px);">&#x2039;</button>
-            <button id="flyoutNavR" style="pointer-events:auto;position:absolute;right:6px;bottom:0;width:36px;height:44px;background:rgba(10,15,30,.75);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:rgba(255,255,255,.9);font-size:22px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(6px);">&#x203a;</button>
+            <button id="flyoutNavL" style="pointer-events:auto;position:absolute;left:6px;bottom:0;width:36px;height:40px;background:rgba(10,15,30,.82);border:1px solid rgba(255,255,255,.18);border-radius:12px;color:rgba(255,255,255,.92);font-size:22px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">&#x2039;</button>
+            <button id="flyoutNavR" style="pointer-events:auto;position:absolute;right:6px;bottom:0;width:36px;height:40px;background:rgba(10,15,30,.82);border:1px solid rgba(255,255,255,.18);border-radius:12px;color:rgba(255,255,255,.92);font-size:22px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">&#x203a;</button>
         </div>
         </section>
 
@@ -2887,9 +2887,17 @@ let _isMobile = null;
                 const contentW = metrics.scrollWidth || metrics.contentWidth || 0;
                 const viewW    = metrics.viewWidth || 0;
                 const maxScroll = Math.max(0, contentW - viewW);
-                const cur = -(metrics.scrollLeft || metrics.viewLeft - (metrics.contentLeft || 0));
-                fw.scrollX = -Math.max(0, Math.min(maxScroll, cur + step));
-                fw.resizeContents && fw.resizeContents();
+                /* Поточна позиція скролу (позитивне число = скільки проскролено) */
+                const cur = Math.max(0, (metrics.viewLeft || 0) - (metrics.contentLeft || 0));
+                const next = Math.max(0, Math.min(maxScroll, cur + step));
+                /* Blockly 9.x API: fw.scroll(x, y) — x від'ємне (ліворуч = від'ємно) */
+                if (typeof fw.scroll === 'function') {
+                    fw.scroll(-next, 0);
+                } else {
+                    /* Fallback для старих версій */
+                    fw.scrollX = -next;
+                    fw.resizeContents && fw.resizeContents();
+                }
             }
 
             function setupBtn(btn, step) {
