@@ -284,28 +284,47 @@ class FieldPaintGrid extends Blockly.Field {
         this._canvasImg = imgEl;
         this._flushCanvas();
 
-        /* Прозорий хіт-rect рівно на розмір полотна */
+        /* Хіт-rect: fill-opacity:0.001 бо деякі браузери ігнорують
+           pointer events на fill:transparent */
         const hitRect = this._svg('rect',{
             x:'0', y:'0', width:String(W), height:String(H),
-            fill:'transparent',
-            style:'cursor:crosshair;touch-action:none'
+            fill:'rgba(0,0,0,0.001)',
+            style:'cursor:crosshair;touch-action:none;pointer-events:all'
         }, g);
 
         let _drawing = false;
         let _erasing = false;
 
         const _getIdx = (clientX, clientY) => {
-            const svgEl = hitRect.ownerSVGElement;
-            if(!svgEl) return -1;
-            const pt = svgEl.createSVGPoint();
-            pt.x = clientX; pt.y = clientY;
-            const m = hitRect.getScreenCTM();
-            if(!m) return -1;
-            const local = pt.matrixTransform(m.inverse());
-            const col = Math.floor(local.x / C);
-            const row = Math.floor(local.y / C);
-            if(col<0||col>=this.cols||row<0||row>=this.rows) return -1;
-            return row*this.cols+col;
+            /* Спочатку пробуємо SVG matrix (точно враховує zoom/pan) */
+            try {
+                const svgEl = hitRect.ownerSVGElement;
+                if(svgEl) {
+                    const pt = svgEl.createSVGPoint();
+                    pt.x = clientX; pt.y = clientY;
+                    const m = hitRect.getScreenCTM();
+                    if(m) {
+                        const local = pt.matrixTransform(m.inverse());
+                        const col = Math.floor(local.x / C);
+                        const row = Math.floor(local.y / C);
+                        if(col>=0&&col<this.cols&&row>=0&&row<this.rows)
+                            return row*this.cols+col;
+                    }
+                }
+            } catch(_) {}
+            /* Fallback: getBoundingClientRect */
+            try {
+                const br = hitRect.getBoundingClientRect();
+                const scaleX = (W) / br.width;
+                const scaleY = (H) / br.height;
+                const lx = (clientX - br.left) * scaleX;
+                const ly = (clientY - br.top)  * scaleY;
+                const col = Math.floor(lx / C);
+                const row = Math.floor(ly / C);
+                if(col>=0&&col<this.cols&&row>=0&&row<this.rows)
+                    return row*this.cols+col;
+            } catch(_) {}
+            return -1;
         };
 
         let _rafPending = false;
