@@ -1,12 +1,4 @@
-// @ts-nocheck
-/* ================================================================
-   blocks_display.js  v4 — Canvas-based FieldPaintGrid
-   Малювання через HTML Canvas у foreignObject — повна ізоляція
-   від Blockly gesture системи. Ніяких конфліктів touch/drag.
-   ================================================================ */
-/* ================================================================
-   PIXEL ENGINE
-   ================================================================ */
+
 (function () {
 const W = 128, H = 64;
 const _buf    = new Uint8Array(W * H);
@@ -260,83 +252,99 @@ class FieldPaintGrid extends Blockly.Field {
         this._svg('rect',{x:0,y:0,width:W+PW,height:H,fill:'#0a0f1a',rx:4},g);
 
         /* ================================================================
-           CANVAS через foreignObject — повна ізоляція від Blockly SVG
+           CANVAS (offscreen) + прозорий SVG overlay для подій
+           Canvas рендерить пікселі, SVG overlay перехоплює події
+           ДО Blockly gesture системи через stopPropagation.
            ================================================================ */
-        const fo = document.createElementNS('http://www.w3.org/2000/svg','foreignObject');
-        fo.setAttribute('x','0');
-        fo.setAttribute('y','0');
-        fo.setAttribute('width', String(W));
-        fo.setAttribute('height', String(H));
-        g.appendChild(fo);
 
+        /* Offscreen canvas для рендерингу */
         const canvas = document.createElement('canvas');
         canvas.width  = W;
         canvas.height = H;
-        canvas.style.cssText = 'display:block;touch-action:none;cursor:crosshair;';
-        fo.appendChild(canvas);
-
         this._canvas = canvas;
         this._ctx    = canvas.getContext('2d');
         this._drawCanvas();
 
-        /* ── Canvas events — повністю незалежні від SVG/Blockly ── */
+        /* SVG image що показує canvas як картинку */
+        const imgEl = this._svg('image',{
+            x:'0', y:'0', width:String(W), height:String(H),
+            'image-rendering':'pixelated',
+            style:'cursor:crosshair'
+        }, g);
+        this._canvasImg = imgEl;
+        this._flushCanvas();
+
+        /* Прозорий SVG rect поверх всього — перехоплює події */
+        const overlay = this._svg('rect',{
+            x:'0', y:'0', width:String(W), height:String(H),
+            fill:'transparent', style:'cursor:crosshair;touch-action:none'
+        }, g);
+
         let drawing = false;
         let erasing = false;
 
-        const getIdx = (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const src  = e.touches ? e.touches[0] : e;
-            const cx = src.clientX - rect.left;
-            const cy = src.clientY - rect.top;
-            /* Масштаб: canvas.width / rect.width (Blockly може масштабувати SVG) */
-            const scaleX = canvas.width  / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const col = Math.floor((cx * scaleX) / C);
-            const row = Math.floor((cy * scaleY) / C);
+        const getIdx = (clientX, clientY) => {
+            const svgEl = overlay.ownerSVGElement;
+            if(!svgEl) return -1;
+            const pt = svgEl.createSVGPoint();
+            pt.x = clientX; pt.y = clientY;
+            const m = overlay.getScreenCTM();
+            if(!m) return -1;
+            const local = pt.matrixTransform(m.inverse());
+            const col = Math.floor(local.x / C);
+            const row = Math.floor(local.y / C);
             if(col<0||col>=this.cols||row<0||row>=this.rows) return -1;
             return row*this.cols+col;
         };
 
-        const paint = (e) => {
-            const idx = getIdx(e);
+        const paint = (clientX, clientY) => {
+            const idx = getIdx(clientX, clientY);
             if(idx<0) return;
             const newVal = erasing ? 0 : 1;
             if(this.pixels[idx]===newVal) return;
             this.pixels[idx] = newVal;
             this._drawCell(idx);
+            this._flushCanvas();
             this.value_ = this._ser();
         };
 
-        canvas.addEventListener('mousedown', e=>{
+        /* Mouse */
+        overlay.addEventListener('mousedown', e=>{
             if(e.button!==0) return;
-            e.preventDefault();
+            e.preventDefault(); e.stopPropagation();
             drawing = true;
-            const idx = getIdx(e);
-            if(idx>=0){ erasing = this.pixels[idx]===1; }
-            paint(e);
+            erasing = (this.pixels[getIdx(e.clientX,e.clientY)??-1] ?? 0) === 1;
+            const idx = getIdx(e.clientX, e.clientY);
+            if(idx>=0) erasing = this.pixels[idx]===1;
+            paint(e.clientX, e.clientY);
         });
-        canvas.addEventListener('mousemove', e=>{
+        overlay.addEventListener('mousemove', e=>{
             if(!drawing) return;
             e.preventDefault();
-            paint(e);
+            paint(e.clientX, e.clientY);
         });
-        canvas.addEventListener('mouseup',   ()=>{ drawing=false; });
-        canvas.addEventListener('mouseleave',()=>{ drawing=false; });
+        overlay.addEventListener('mouseup',   ()=>{ drawing=false; });
+        overlay.addEventListener('mouseleave',()=>{ drawing=false; });
 
-        canvas.addEventListener('touchstart', e=>{
-            e.preventDefault();
+        /* Touch — passive:false + stopPropagation щоб Blockly не тягнув */
+        overlay.addEventListener('touchstart', e=>{
+            if(e.cancelable) e.preventDefault();
+            e.stopPropagation();
             drawing = true;
-            const idx = getIdx(e);
-            if(idx>=0){ erasing = this.pixels[idx]===1; }
-            paint(e);
+            const t = e.touches[0];
+            const idx = getIdx(t.clientX, t.clientY);
+            if(idx>=0) erasing = this.pixels[idx]===1;
+            paint(t.clientX, t.clientY);
         }, {passive:false});
-        canvas.addEventListener('touchmove', e=>{
-            e.preventDefault();
+        overlay.addEventListener('touchmove', e=>{
+            if(e.cancelable) e.preventDefault();
+            e.stopPropagation();
             if(!drawing) return;
-            paint(e);
+            const t = e.touches[0];
+            paint(t.clientX, t.clientY);
         }, {passive:false});
-        canvas.addEventListener('touchend',   ()=>{ drawing=false; });
-        canvas.addEventListener('touchcancel',()=>{ drawing=false; });
+        overlay.addEventListener('touchend',   e=>{ e.stopPropagation(); drawing=false; });
+        overlay.addEventListener('touchcancel',e=>{ e.stopPropagation(); drawing=false; });
 
         /* ── Сітка поверх canvas (SVG лінії) ── */
         for(let r=0;r<=this.rows;r++)
@@ -384,14 +392,14 @@ class FieldPaintGrid extends Blockly.Field {
             b.addEventListener('click',fn); t.addEventListener('click',fn);
         };
         btnR(0,56,'🗑 очистити',()=>{
-            this.pixels.fill(0); this._drawCanvas(); this.value_=this._ser();
+            this.pixels.fill(0); this._drawCanvas(); this._flushCanvas(); this.value_=this._ser();
         });
         btnR(59,38,'█ залити',()=>{
-            this.pixels.fill(1); this._drawCanvas(); this.value_=this._ser();
+            this.pixels.fill(1); this._drawCanvas(); this._flushCanvas(); this.value_=this._ser();
         });
         btnR(100,W-100+PW,'↺ інверт',()=>{
             for(let i=0;i<this.pixels.length;i++) this.pixels[i]=this.pixels[i]?0:1;
-            this._drawCanvas(); this.value_=this._ser();
+            this._drawCanvas(); this._flushCanvas(); this.value_=this._ser();
         });
 
         /* ── Кнопки знизу (рядок 2 — фото-трасування) ── */
@@ -438,7 +446,7 @@ class FieldPaintGrid extends Blockly.Field {
                 const i4=(sy*cw+sx)*4,br=data[i4]*.299+data[i4+1]*.587+data[i4+2]*.114;
                 self.pixels[r*self.cols+c2]=br<128?1:0;
             }
-            self._drawCanvas(); self.value_=self._ser();
+            self._drawCanvas(); self._flushCanvas(); self.value_=self._ser();
         },'#162e1e');
 
         this.size_.width  = W+PW+2;
@@ -468,6 +476,12 @@ class FieldPaintGrid extends Blockly.Field {
         }
     }
 
+    /* ── Оновити SVG image з canvas ── */
+    _flushCanvas(){
+        if(!this._canvas||!this._canvasImg) return;
+        this._canvasImg.setAttribute('href', this._canvas.toDataURL());
+    }
+
     /* ── Перемалювати одну клітинку ── */
     _drawCell(idx){
         const ctx=this._ctx;
@@ -494,7 +508,7 @@ class FieldPaintGrid extends Blockly.Field {
 
     setOnionSkin(pixels){
         this._onion = pixels ? new Uint8Array(pixels) : null;
-        this._drawCanvas();
+        this._drawCanvas(); this._flushCanvas();
     }
 
     _scale(s){
