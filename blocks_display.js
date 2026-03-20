@@ -294,31 +294,21 @@ class FieldPaintGrid extends Blockly.Field {
             this.value_=this._ser();
         };
 
-        /* ── MOUSE: SVG overlay rect поверх canvas (ПК) ──
-           foreignObject canvas не отримує mousedown від Blockly SVG,
-           тому для миші використовуємо SVG rect що перекриває полотно */
-        const svgHit = this._svg('rect',{
-            x:'0', y:'0', width:String(W), height:String(H),
-            fill:'rgba(0,0,0,0.001)',
-            style:'cursor:crosshair'
-        }, g);
-
-        /* SVG координати → індекс клітинки */
-        const _svgIdx=(clientX,clientY)=>{
+        /* Mouse — SVG rect поверх canvas, бо Blockly перехоплює мишу до foreignObject */
+        const mRect=this._svg('rect',{x:'0',y:'0',width:String(W),height:String(H),
+            fill:'rgba(0,0,0,0.001)',style:'cursor:crosshair'},g);
+        const _svgIdx=(cx,cy)=>{
             try{
-                const svg=svgHit.ownerSVGElement;
-                const pt=svg.createSVGPoint();
-                pt.x=clientX; pt.y=clientY;
-                const local=pt.matrixTransform(svgHit.getScreenCTM().inverse());
-                const col=Math.floor(local.x/C), row=Math.floor(local.y/C);
-                if(col>=0&&col<this.cols&&row>=0&&row<this.rows)
-                    return row*this.cols+col;
+                const pt=mRect.ownerSVGElement.createSVGPoint();
+                pt.x=cx; pt.y=cy;
+                const l=pt.matrixTransform(mRect.getScreenCTM().inverse());
+                const col=Math.floor(l.x/C),row=Math.floor(l.y/C);
+                if(col>=0&&col<this.cols&&row>=0&&row<this.rows) return row*this.cols+col;
             }catch(_){}
-            return _idx(clientX,clientY); /* fallback */
+            return _idx(cx,cy);
         };
-
         let _md=false;
-        svgHit.addEventListener('mousedown',e=>{
+        mRect.addEventListener('mousedown',e=>{
             if(e.button!==0) return;
             e.preventDefault(); e.stopPropagation();
             _md=true;
@@ -326,16 +316,12 @@ class FieldPaintGrid extends Blockly.Field {
             this._e=i>=0?this.pixels[i]===1:false;
             _dot(i);
         });
-        svgHit.addEventListener('mousemove',e=>{
-            if(!_md) return;
-            _dot(_svgIdx(e.clientX,e.clientY));
-        });
-        svgHit.addEventListener('mouseup',  ()=>{ _md=false; });
-        svgHit.addEventListener('mouseleave',()=>{ _md=false; });
-        document.addEventListener('mouseup', ()=>{ _md=false; });
+        mRect.addEventListener('mousemove',e=>{ if(!_md) return; _dot(_svgIdx(e.clientX,e.clientY)); });
+        mRect.addEventListener('mouseup',   ()=>{ _md=false; });
+        mRect.addEventListener('mouseleave',()=>{ _md=false; });
+        document.addEventListener('mouseup',()=>{ _md=false; });
 
-        /* ── TOUCH: canvas listeners (телефон) ──
-           Touch events на canvas в foreignObject працюють добре */
+        /* Touch */
         let _td=false;
         cv.addEventListener('touchstart',e=>{
             if(e.cancelable) e.preventDefault();
