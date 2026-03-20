@@ -307,8 +307,7 @@ class FieldPaintGrid extends Blockly.Field {
             rc.addEventListener('mousedown', e => {
                 if (e.button !== 0) return;
                 e.preventDefault();
-                /* НЕ stopPropagation — інакше Blockly не отримує подію
-                   і drag workspace не працює після зміни масштабу */
+                e.stopPropagation(); /* потрібно щоб Blockly не тягнув блок */
                 this._p = true;
                 this._e = this.pixels[idx] === 1;
                 this._dot(idx, rc);
@@ -320,7 +319,7 @@ class FieldPaintGrid extends Blockly.Field {
             });
             rc.addEventListener('touchstart', e => {
                 if(e.cancelable) e.preventDefault();
-                /* НЕ stopPropagation — інакше Blockly gesture не стартує */
+                e.stopPropagation(); /* потрібно щоб Blockly не тягнув блок */
                 this._p = true;
                 this._e = this.pixels[idx] === 1;
                 this._dot(idx, rc);
