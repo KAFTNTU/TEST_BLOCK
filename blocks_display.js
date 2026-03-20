@@ -1,13 +1,3 @@
-// @ts-nocheck
-/* ================================================================
-   blocks_display.js  v3
-   PixelEngine + ігрові блоки + ігровий цикл + спрайти
-   Тільки браузер. STM32 отримує лише RLE-bitmap.
-   353 рядок міянти висоту блоків малювалки
-   ================================================================ */
-/* ================================================================
-   PIXEL ENGINE
-   ================================================================ */
 (function () {
 const W = 128, H = 64;
 const _buf    = new Uint8Array(W * H);
@@ -259,17 +249,27 @@ class FieldPaintGrid extends Blockly.Field {
     }
     _svg(t,a,p){ const e=document.createElementNS('http://www.w3.org/2000/svg',t); Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v)); p.appendChild(e); return e; }
     _build(){
-        /* Знімаємо старі document-listeners перед перебудовою.
-           Без цього після _scale() → _build() старі замороженні обробники
-           лишались на document і блокували дотики на новому полотні. */
+        /* Знімаємо старі document-listeners перед перебудовою */
         if(this._onDocMove) document.removeEventListener('touchmove', this._onDocMove, {capture:true, passive:false});
         if(this._onDocEnd)  document.removeEventListener('touchend',  this._onDocEnd,  false);
         this._p = false;
         this._docListening = false;
 
         const g=this.fieldGroup_; while(g.firstChild)g.removeChild(g.firstChild);
+
+        /* Знімаємо старі stopPropagation-handlers з fieldGroup_.
+           БЕЗ ЦЬОГО: кожен _build() додає нові анонімні listeners на g,
+           вони накопичуються і блокують Blockly gesture (drag workspace). */
+        if(this._stopPropHandlers){
+            this._stopPropHandlers.forEach(([ev, fn, opts]) =>
+                g.removeEventListener(ev, fn, opts));
+        }
+        this._stopPropHandlers = [];
         ['mousedown','pointerdown','touchstart'].forEach(ev=>{
-            g.addEventListener(ev, e=>{ e.stopPropagation(); }, ev==='touchstart'?{passive:false}:false);
+            const opts = ev==='touchstart' ? {passive:false} : false;
+            const fn = e => e.stopPropagation();
+            g.addEventListener(ev, fn, opts);
+            this._stopPropHandlers.push([ev, fn, opts]);
         });
         const W=this.cW,H=this.cH,PW=36,C=this.CELL;
         this._svg('rect',{x:0,y:0,width:W+PW,height:H,fill:'#0a0f1a',rx:4},g);
