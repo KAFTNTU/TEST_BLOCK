@@ -301,8 +301,6 @@ class FieldPaintGrid extends Blockly.Field {
 
         document.addEventListener('mouseup',()=>{ this._p=false; });
         document.addEventListener('visibilitychange',()=>{ this._p=false; });
-        for(let r=0;r<=this.rows;r++) this._svg('line',{x1:0,y1:r*this.CELL,x2:this.cW,y2:r*this.CELL,stroke:'#1e3a5f','stroke-width':'0.4'},g);
-        for(let c=0;c<=this.cols;c++) this._svg('line',{x1:c*this.CELL,y1:0,x2:c*this.CELL,y2:this.cH,stroke:'#1e3a5f','stroke-width':'0.4'},g);
         this._buildUI(g);
     }
 
@@ -346,8 +344,9 @@ class FieldPaintGrid extends Blockly.Field {
         },{passive:false});
         cv.addEventListener('touchend',()=>{_td=false;});
         cv.addEventListener('touchcancel',()=>{_td=false;});
-        for(let r=0;r<=this.rows;r++) this._svg('line',{x1:0,y1:r*C,x2:W,y2:r*C,stroke:'#1e3a5f','stroke-width':'0.3','pointer-events':'none'},g);
-        for(let c=0;c<=this.cols;c++) this._svg('line',{x1:c*C,y1:0,x2:c*C,y2:H,stroke:'#1e3a5f','stroke-width':'0.3','pointer-events':'none'},g);
+        /* Сітка тільки на телефоні */
+        for(let r=0;r<=this.rows;r++) this._svg('line',{x1:0,y1:r*C,x2:W,y2:r*C,stroke:'#1e3a5f','stroke-width':'0.4','pointer-events':'none'},g);
+        for(let c=0;c<=this.cols;c++) this._svg('line',{x1:c*C,y1:0,x2:c*C,y2:H,stroke:'#1e3a5f','stroke-width':'0.4','pointer-events':'none'},g);
         this._buildUI(g);
     }
 
@@ -523,7 +522,7 @@ class FieldPaintGrid extends Blockly.Field {
             canvas.addEventListener('touchstart',onD,{passive:false});canvas.addEventListener('touchmove',onM,{passive:false});canvas.addEventListener('touchend',onU);
             const crop=()=>{const off=document.createElement('canvas');off.width=self.cols;off.height=self.rows;const oc=off.getContext('2d');const sx=img.width/cW,sy=img.height/cH;oc.drawImage(img,rX*sx,rY*sy,rW*sx,rH*sy,0,0,self.cols,self.rows);return oc.getImageData(0,0,self.cols,self.rows);};
             btnOvl.onclick=()=>{const off=document.createElement('canvas');off.width=self.cols;off.height=self.rows;const oc=off.getContext('2d');const sx=img.width/cW,sy=img.height/cH;oc.drawImage(img,rX*sx,rY*sy,rW*sx,rH*sy,0,0,self.cols,self.rows);self._imgDataUrl=off.toDataURL();self._imgCropData=crop();if(self._overlayImg){self._overlayImg.setAttribute('href',self._imgDataUrl);self._overlayImg.setAttribute('opacity',self._imgOpacity);self._overlayImg.style.display='';}modal.remove();};
-            btnCnv.onclick=()=>{const id=crop();const thr=parseInt(slider.value)||128;for(let r=0;r<self.rows;r++)for(let c2=0;c2<self.cols;c2++){const i4=(r*self.cols+c2)*4,br=id.data[i4]*.299+id.data[i4+1]*.587+id.data[i4+2]*.114;self.pixels[r*self.cols+c2]=br<thr?1:0;}self._imgCropData={data:id.data,cw:self.cols,ch:self.rows};self._rects.forEach((_,i)=>self._rects[i].setAttribute('fill',self._cellColor(i)));self.value_=self._ser();modal.remove();};
+            btnCnv.onclick=()=>{const id=crop();const thr=parseInt(slider.value)||128;for(let r=0;r<self.rows;r++)for(let c2=0;c2<self.cols;c2++){const i4=(r*self.cols+c2)*4,br=id.data[i4]*.299+id.data[i4+1]*.587+id.data[i4+2]*.114;self.pixels[r*self.cols+c2]=br<thr?1:0;}self._imgCropData={data:id.data,cw:self.cols,ch:self.rows};self._refreshAll();self.value_=self._ser();modal.remove();};
         };img.src=dataUrl;
     }
 }
