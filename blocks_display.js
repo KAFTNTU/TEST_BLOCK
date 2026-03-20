@@ -494,7 +494,9 @@ class FieldPaintGrid extends Blockly.Field {
         const ctx=this._ctx;
         if(!ctx) return;
         const C=this.CELL;
-        ctx.clearRect(0,0,this._canvas.width,this._canvas.height);
+        /* Фон — інакше transparent → чорний при toDataURL */
+        ctx.fillStyle='#0a0f1a';
+        ctx.fillRect(0,0,this._canvas.width,this._canvas.height);
         for(let r=0;r<this.rows;r++){
             for(let c=0;c<this.cols;c++){
                 const idx=r*this.cols+c;
@@ -519,7 +521,10 @@ class FieldPaintGrid extends Blockly.Field {
     /* ── Оновити SVG image з canvas ── */
     _flushCanvas(){
         if(!this._canvas||!this._canvasImg) return;
-        this._canvasImg.setAttribute('href', this._canvas.toDataURL());
+        const url = this._canvas.toDataURL();
+        /* href — новий стандарт; xlink:href — для старих браузерів */
+        this._canvasImg.setAttribute('href', url);
+        this._canvasImg.setAttributeNS('http://www.w3.org/1999/xlink','href',url);
     }
 
     /* ── Перемалювати одну клітинку ── */
@@ -529,7 +534,8 @@ class FieldPaintGrid extends Blockly.Field {
         const C=this.CELL;
         const col=idx%this.cols, row=Math.floor(idx/this.cols);
         const rx=col*C, ry=row*C, rr=C>8?2:1;
-        ctx.clearRect(rx,ry,C,C);
+        ctx.fillStyle='#0a0f1a';
+        ctx.fillRect(rx,ry,C,C);
         ctx.fillStyle=this._cellColor(idx);
         if(rr>0){
             const x=rx+0.5,y=ry+0.5,w=C-1,h=C-1,r=rr;
