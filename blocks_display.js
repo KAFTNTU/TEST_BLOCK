@@ -308,6 +308,7 @@ class FieldPaintGrid extends Blockly.Field {
             return row*this.cols+col;
         };
 
+        let _rafPending = false;
         const _paint = (clientX, clientY) => {
             const idx = _getIdx(clientX, clientY);
             if(idx<0) return;
@@ -316,6 +317,14 @@ class FieldPaintGrid extends Blockly.Field {
             this.pixels[idx] = nv;
             this._drawCell(idx);
             this.value_ = this._ser();
+            /* Оновлюємо SVG image через rAF — не більше 1 разу на кадр */
+            if(!_rafPending){
+                _rafPending = true;
+                requestAnimationFrame(()=>{
+                    this._flushCanvas();
+                    _rafPending = false;
+                });
+            }
         };
 
         hitRect.addEventListener('pointerdown', e=>{
