@@ -266,13 +266,7 @@ class FieldPaintGrid extends Blockly.Field {
         this._docListening = false;
 
         const g=this.fieldGroup_; while(g.firstChild)g.removeChild(g.firstChild);
-        /* Зупиняємо BUBBLE фазу на fieldGroup_ */
-        if(!this._gListenerAdded){
-            this._gListenerAdded = true;
-            ['mousedown','pointerdown','touchstart'].forEach(ev=>{
-                g.addEventListener(ev, e=>{ e.stopPropagation(); }, ev==='touchstart'?{passive:false}:false);
-            });
-        }
+        /* Нічого зайвого на fieldGroup_ не вішаємо */
         const W=this.cW,H=this.cH,PW=36,C=this.CELL;
         this._svg('rect',{x:0,y:0,width:W+PW,height:H,fill:'#0a0f1a',rx:4},g);
         this._rects=[];
@@ -313,7 +307,7 @@ class FieldPaintGrid extends Blockly.Field {
                 this._e = this.pixels[idx] === 1;
                 this._dot(idx, rc);
             };
-            /* Тільки ЛКМ (button===0) */
+            /* mousedown на клітинці — починаємо малювання */
             rc.addEventListener('mousedown', e => {
                 if (e.button !== 0) return;
                 e.preventDefault(); e.stopPropagation();
@@ -321,14 +315,14 @@ class FieldPaintGrid extends Blockly.Field {
                 this._e = this.pixels[idx] === 1;
                 this._dot(idx, rc);
             });
-            /* mouseenter: малюємо лише якщо LMB справді затиснута */
-            rc.addEventListener('mouseenter', e => {
-                if (!(e.buttons & 1)) { this._p = false; return; }
-                if (this._p) this._dot(idx, rc);
-            });
             rc.addEventListener('touchstart', e => {
                 if(e.cancelable) e.preventDefault();
-                e.stopPropagation();
+                /* Скасовуємо gesture Blockly — ми в зоні малювання */
+                try {
+                    const ws = window.workspace || Blockly.getMainWorkspace();
+                    const gg = ws && ws.currentGesture_;
+                    if(gg) gg.cancel();
+                } catch(_) {}
                 this._p = true;
                 this._e = this.pixels[idx] === 1;
                 this._dot(idx, rc);
@@ -340,6 +334,16 @@ class FieldPaintGrid extends Blockly.Field {
             }, { passive:false });
             this._rects.push(rc);
         }
+        /* mousemove на рівні всієї сітки — без пропусків при швидкому русі */
+        cg.addEventListener('mousemove', e => {
+            if (!(e.buttons & 1)) { this._p = false; return; }
+            if (!this._p) return;
+            /* Знайти клітинку під курсором через _rects */
+            const el = e.target;
+            if (el && el._paintIdx !== undefined) {
+                this._dot(el._paintIdx, this._rects[el._paintIdx]);
+            }
+        });
         document.addEventListener('mouseup', () => { this._p = false; });
         document.addEventListener('visibilitychange', () => { this._p = false; });
         /* Сітка */
