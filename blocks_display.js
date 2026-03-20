@@ -1,3 +1,4 @@
+
 (function () {
 const W = 128, H = 64;
 const _buf    = new Uint8Array(W * H);
@@ -257,20 +258,8 @@ class FieldPaintGrid extends Blockly.Field {
 
         const g=this.fieldGroup_; while(g.firstChild)g.removeChild(g.firstChild);
 
-        /* Знімаємо старі stopPropagation-handlers з fieldGroup_.
-           БЕЗ ЦЬОГО: кожен _build() додає нові анонімні listeners на g,
-           вони накопичуються і блокують Blockly gesture (drag workspace). */
-        if(this._stopPropHandlers){
-            this._stopPropHandlers.forEach(([ev, fn, opts]) =>
-                g.removeEventListener(ev, fn, opts));
-        }
-        this._stopPropHandlers = [];
-        ['mousedown','pointerdown','touchstart'].forEach(ev=>{
-            const opts = ev==='touchstart' ? {passive:false} : false;
-            const fn = e => e.stopPropagation();
-            g.addEventListener(ev, fn, opts);
-            this._stopPropHandlers.push([ev, fn, opts]);
-        });
+        /* НЕ вішаємо глобальний stopPropagation на fieldGroup_ —
+           це блокувало б Blockly drag після кожного _build(). */
         const W=this.cW,H=this.cH,PW=36,C=this.CELL;
         this._svg('rect',{x:0,y:0,width:W+PW,height:H,fill:'#0a0f1a',rx:4},g);
         this._rects=[];
@@ -278,8 +267,11 @@ class FieldPaintGrid extends Blockly.Field {
 
         this._onDocMove = e => {
             if(!this._p) return;
+            /* preventDefault тільки якщо реально малюємо —
+               не заважаємо Blockly drag коли this._p = false */
             if(e.cancelable) e.preventDefault();
             const t = e.touches[0];
+            if(!t) return;
             const el = document.elementFromPoint(t.clientX, t.clientY);
             if(el && el._paintIdx !== undefined) this._dot(el._paintIdx, el);
         };
@@ -314,7 +306,9 @@ class FieldPaintGrid extends Blockly.Field {
             /* Тільки ЛКМ (button===0) */
             rc.addEventListener('mousedown', e => {
                 if (e.button !== 0) return;
-                e.preventDefault(); e.stopPropagation();
+                e.preventDefault();
+                /* НЕ stopPropagation — інакше Blockly не отримує подію
+                   і drag workspace не працює після зміни масштабу */
                 this._p = true;
                 this._e = this.pixels[idx] === 1;
                 this._dot(idx, rc);
@@ -326,7 +320,7 @@ class FieldPaintGrid extends Blockly.Field {
             });
             rc.addEventListener('touchstart', e => {
                 if(e.cancelable) e.preventDefault();
-                e.stopPropagation();
+                /* НЕ stopPropagation — інакше Blockly gesture не стартує */
                 this._p = true;
                 this._e = this.pixels[idx] === 1;
                 this._dot(idx, rc);
