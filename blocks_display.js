@@ -146,60 +146,11 @@ function _spriteEdge(id){
     return s.x<=0||s.x+s.w>=W||s.y<=0||s.y+s.h>=H;
 }
 
-/* ── 5×7 bitmap font ── */
-const _FONT5=[
- [0x00,0x00,0x00,0x00,0x00],[0x00,0x00,0x5F,0x00,0x00],[0x00,0x07,0x00,0x07,0x00],
- [0x14,0x7F,0x14,0x7F,0x14],[0x24,0x2A,0x7F,0x2A,0x12],[0x23,0x13,0x08,0x64,0x62],
- [0x36,0x49,0x55,0x22,0x50],[0x00,0x05,0x03,0x00,0x00],[0x00,0x1C,0x22,0x41,0x00],
- [0x00,0x41,0x22,0x1C,0x00],[0x14,0x08,0x3E,0x08,0x14],[0x08,0x08,0x3E,0x08,0x08],
- [0x00,0x50,0x30,0x00,0x00],[0x08,0x08,0x08,0x08,0x08],[0x00,0x60,0x60,0x00,0x00],
- [0x20,0x10,0x08,0x04,0x02],[0x3E,0x51,0x49,0x45,0x3E],[0x00,0x42,0x7F,0x40,0x00],
- [0x42,0x61,0x51,0x49,0x46],[0x21,0x41,0x45,0x4B,0x31],[0x18,0x14,0x12,0x7F,0x10],
- [0x27,0x45,0x45,0x45,0x39],[0x3C,0x4A,0x49,0x49,0x30],[0x01,0x71,0x09,0x05,0x03],
- [0x36,0x49,0x49,0x49,0x36],[0x06,0x49,0x49,0x29,0x1E],[0x00,0x36,0x36,0x00,0x00],
- [0x00,0x56,0x36,0x00,0x00],[0x08,0x14,0x22,0x41,0x00],[0x14,0x14,0x14,0x14,0x14],
- [0x00,0x41,0x22,0x14,0x08],[0x02,0x01,0x51,0x09,0x06],[0x32,0x49,0x79,0x41,0x3E],
- [0x7E,0x11,0x11,0x11,0x7E],[0x7F,0x49,0x49,0x49,0x36],[0x3E,0x41,0x41,0x41,0x22],
- [0x7F,0x41,0x41,0x22,0x1C],[0x7F,0x49,0x49,0x49,0x41],[0x7F,0x09,0x09,0x09,0x01],
- [0x3E,0x41,0x49,0x49,0x7A],[0x7F,0x08,0x08,0x08,0x7F],[0x00,0x41,0x7F,0x41,0x00],
- [0x20,0x40,0x41,0x3F,0x01],[0x7F,0x08,0x14,0x22,0x41],[0x7F,0x40,0x40,0x40,0x40],
- [0x7F,0x02,0x0C,0x02,0x7F],[0x7F,0x04,0x08,0x10,0x7F],[0x3E,0x41,0x41,0x41,0x3E],
- [0x7F,0x09,0x09,0x09,0x06],[0x3E,0x41,0x51,0x21,0x5E],[0x7F,0x09,0x19,0x29,0x46],
- [0x46,0x49,0x49,0x49,0x31],[0x01,0x01,0x7F,0x01,0x01],[0x3F,0x40,0x40,0x40,0x3F],
- [0x1F,0x20,0x40,0x20,0x1F],[0x3F,0x40,0x38,0x40,0x3F],[0x63,0x14,0x08,0x14,0x63],
- [0x07,0x08,0x70,0x08,0x07],[0x61,0x51,0x49,0x45,0x43],
-];
-const _CYR_G={
- 'А':[0x7E,0x11,0x11,0x11,0x7E],'Б':[0x7F,0x45,0x45,0x45,0x38],
- 'В':[0x7F,0x49,0x49,0x49,0x36],'Г':[0x7F,0x01,0x01,0x01,0x01],
- 'Д':[0x7E,0x09,0x09,0x09,0x7E],'Е':[0x7F,0x49,0x49,0x49,0x41],
- 'Є':[0x3E,0x41,0x49,0x49,0x2A],'Ж':[0x67,0x18,0x7F,0x18,0x67],
- 'З':[0x41,0x49,0x49,0x49,0x36],'И':[0x7F,0x10,0x08,0x04,0x7F],
- 'І':[0x00,0x41,0x7F,0x41,0x00],'Ї':[0x48,0x41,0x7F,0x41,0x48],
- 'Й':[0x7F,0x12,0x0A,0x04,0x7F],'К':[0x7F,0x08,0x14,0x22,0x41],
- 'Л':[0x7E,0x01,0x01,0x01,0x7F],'М':[0x7F,0x02,0x04,0x02,0x7F],
- 'Н':[0x7F,0x08,0x08,0x08,0x7F],'О':[0x3E,0x41,0x41,0x41,0x3E],
- 'П':[0x7F,0x01,0x01,0x01,0x7F],'Р':[0x7F,0x09,0x09,0x09,0x06],
- 'С':[0x3E,0x41,0x41,0x41,0x22],'Т':[0x01,0x01,0x7F,0x01,0x01],
- 'У':[0x07,0x08,0x70,0x08,0x07],'Ф':[0x0A,0x3E,0x49,0x3E,0x0A],
- 'Х':[0x41,0x22,0x1C,0x22,0x41],'Ц':[0x7F,0x40,0x40,0x40,0x7F],
- 'Ч':[0x0F,0x08,0x08,0x08,0x7F],'Ш':[0x7F,0x40,0x7F,0x40,0x7F],
- 'Щ':[0x7F,0x40,0x7F,0x42,0x7F],'Ь':[0x7F,0x48,0x48,0x48,0x30],
- 'Ю':[0x7F,0x08,0x36,0x41,0x3E],'Я':[0x46,0x29,0x19,0x09,0x7F],
-};
-const _CYR_L={'а':'А','б':'Б','в':'В','г':'Г','д':'Д','е':'Е','є':'Є','ж':'Ж',
- 'з':'З','и':'И','і':'І','ї':'Ї','й':'Й','к':'К','л':'Л','м':'М',
- 'н':'Н','о':'О','п':'П','р':'Р','с':'С','т':'Т','у':'У','ф':'Ф',
- 'х':'Х','ц':'Ц','ч':'Ч','ш':'Ш','щ':'Щ','ь':'Ь','ю':'Ю','я':'Я'};
-function _drawText(str,x,y,scale){
-    scale=scale||1; const cw=6*scale;
-    for(let i=0;i<str.length;i++){
-        let ch=str[i]; if(_CYR_L[ch])ch=_CYR_L[ch];
-        let gl=_CYR_G[ch];
-        if(!gl){const uc=ch.toUpperCase(),cd=uc.charCodeAt(0);gl=(cd>=32&&cd<=90)?_FONT5[cd-32]:_FONT5[0];}
-        for(let col=0;col<5;col++){const bits=gl[col];for(let row=0;row<7;row++){if(bits&(1<<row)){const px=x+i*cw+col*scale,py=y+row*scale;for(let sy=0;sy<scale;sy++)for(let sx=0;sx<scale;sx++)_set(px+sx,py+sy,1);}}}
-    }
-}
+/* ── 5x7 bitmap font ── */
+const _FONT5=[[0x00,0x00,0x00,0x00,0x00],[0x00,0x00,0x5F,0x00,0x00],[0x00,0x07,0x00,0x07,0x00],[0x14,0x7F,0x14,0x7F,0x14],[0x24,0x2A,0x7F,0x2A,0x12],[0x23,0x13,0x08,0x64,0x62],[0x36,0x49,0x55,0x22,0x50],[0x00,0x05,0x03,0x00,0x00],[0x00,0x1C,0x22,0x41,0x00],[0x00,0x41,0x22,0x1C,0x00],[0x14,0x08,0x3E,0x08,0x14],[0x08,0x08,0x3E,0x08,0x08],[0x00,0x50,0x30,0x00,0x00],[0x08,0x08,0x08,0x08,0x08],[0x00,0x60,0x60,0x00,0x00],[0x20,0x10,0x08,0x04,0x02],[0x3E,0x51,0x49,0x45,0x3E],[0x00,0x42,0x7F,0x40,0x00],[0x42,0x61,0x51,0x49,0x46],[0x21,0x41,0x45,0x4B,0x31],[0x18,0x14,0x12,0x7F,0x10],[0x27,0x45,0x45,0x45,0x39],[0x3C,0x4A,0x49,0x49,0x30],[0x01,0x71,0x09,0x05,0x03],[0x36,0x49,0x49,0x49,0x36],[0x06,0x49,0x49,0x29,0x1E],[0x00,0x36,0x36,0x00,0x00],[0x00,0x56,0x36,0x00,0x00],[0x08,0x14,0x22,0x41,0x00],[0x14,0x14,0x14,0x14,0x14],[0x00,0x41,0x22,0x14,0x08],[0x02,0x01,0x51,0x09,0x06],[0x32,0x49,0x79,0x41,0x3E],[0x7E,0x11,0x11,0x11,0x7E],[0x7F,0x49,0x49,0x49,0x36],[0x3E,0x41,0x41,0x41,0x22],[0x7F,0x41,0x41,0x22,0x1C],[0x7F,0x49,0x49,0x49,0x41],[0x7F,0x09,0x09,0x09,0x01],[0x3E,0x41,0x49,0x49,0x7A],[0x7F,0x08,0x08,0x08,0x7F],[0x00,0x41,0x7F,0x41,0x00],[0x20,0x40,0x41,0x3F,0x01],[0x7F,0x08,0x14,0x22,0x41],[0x7F,0x40,0x40,0x40,0x40],[0x7F,0x02,0x0C,0x02,0x7F],[0x7F,0x04,0x08,0x10,0x7F],[0x3E,0x41,0x41,0x41,0x3E],[0x7F,0x09,0x09,0x09,0x06],[0x3E,0x41,0x51,0x21,0x5E],[0x7F,0x09,0x19,0x29,0x46],[0x46,0x49,0x49,0x49,0x31],[0x01,0x01,0x7F,0x01,0x01],[0x3F,0x40,0x40,0x40,0x3F],[0x1F,0x20,0x40,0x20,0x1F],[0x3F,0x40,0x38,0x40,0x3F],[0x63,0x14,0x08,0x14,0x63],[0x07,0x08,0x70,0x08,0x07],[0x61,0x51,0x49,0x45,0x43]];
+const _CYR_G={'А':[0x7E,0x11,0x11,0x11,0x7E],'Б':[0x7F,0x45,0x45,0x45,0x38],'В':[0x7F,0x49,0x49,0x49,0x36],'Г':[0x7F,0x01,0x01,0x01,0x01],'Д':[0x7E,0x09,0x09,0x09,0x7E],'Е':[0x7F,0x49,0x49,0x49,0x41],'Є':[0x3E,0x41,0x49,0x49,0x2A],'Ж':[0x67,0x18,0x7F,0x18,0x67],'З':[0x41,0x49,0x49,0x49,0x36],'И':[0x7F,0x10,0x08,0x04,0x7F],'І':[0x00,0x41,0x7F,0x41,0x00],'Ї':[0x48,0x41,0x7F,0x41,0x48],'Й':[0x7F,0x12,0x0A,0x04,0x7F],'К':[0x7F,0x08,0x14,0x22,0x41],'Л':[0x7E,0x01,0x01,0x01,0x7F],'М':[0x7F,0x02,0x04,0x02,0x7F],'Н':[0x7F,0x08,0x08,0x08,0x7F],'О':[0x3E,0x41,0x41,0x41,0x3E],'П':[0x7F,0x01,0x01,0x01,0x7F],'Р':[0x7F,0x09,0x09,0x09,0x06],'С':[0x3E,0x41,0x41,0x41,0x22],'Т':[0x01,0x01,0x7F,0x01,0x01],'У':[0x07,0x08,0x70,0x08,0x07],'Ф':[0x0A,0x3E,0x49,0x3E,0x0A],'Х':[0x41,0x22,0x1C,0x22,0x41],'Ц':[0x7F,0x40,0x40,0x40,0x7F],'Ч':[0x0F,0x08,0x08,0x08,0x7F],'Ш':[0x7F,0x40,0x7F,0x40,0x7F],'Щ':[0x7F,0x40,0x7F,0x42,0x7F],'Ь':[0x7F,0x48,0x48,0x48,0x30],'Ю':[0x7F,0x08,0x36,0x41,0x3E],'Я':[0x46,0x29,0x19,0x09,0x7F]};
+const _CYR_L={'а':'А','б':'Б','в':'В','г':'Г','д':'Д','е':'Е','є':'Є','ж':'Ж','з':'З','и':'И','і':'І','ї':'Ї','й':'Й','к':'К','л':'Л','м':'М','н':'Н','о':'О','п':'П','р':'Р','с':'С','т':'Т','у':'У','ф':'Ф','х':'Х','ц':'Ц','ч':'Ч','ш':'Ш','щ':'Щ','ь':'Ь','ю':'Ю','я':'Я'};
+function _drawText(str,x,y,scale){scale=scale||1;const cw=6*scale;for(let i=0;i<str.length;i++){let ch=str[i];if(_CYR_L[ch])ch=_CYR_L[ch];let gl=_CYR_G[ch];if(!gl){const uc=ch.toUpperCase(),cd=uc.charCodeAt(0);gl=(cd>=32&&cd<=90)?_FONT5[cd-32]:_FONT5[0];}for(let col=0;col<5;col++){const bits=gl[col];for(let row=0;row<7;row++){if(bits&(1<<row)){const px=x+i*cw+col*scale,py=y+row*scale;for(let sy=0;sy<scale;sy++)for(let sx=0;sx<scale;sx++)_set(px+sx,py+sy,1);}}}}}
 
 window.PixelEngine = {
     W,H,buf:_buf,frames:_frames,
@@ -259,24 +210,115 @@ class FieldPaintGrid extends Blockly.Field {
     }
     _svg(t,a,p){ const e=document.createElementNS('http://www.w3.org/2000/svg',t); Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v)); p.appendChild(e); return e; }
     _build(){
+        if(this._isTouch===undefined)
+            this._isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+        if(this._isTouch) this._buildCanvas();
+        else              this._buildSVG();
+    }
+
+    _buildSVG(){
+        if(this._onDocMove) document.removeEventListener('touchmove',this._onDocMove,{capture:true,passive:false});
+        if(this._onDocEnd)  document.removeEventListener('touchend', this._onDocEnd, false);
+        this._p=false; this._docListening=false;
+
         const g=this.fieldGroup_; while(g.firstChild)g.removeChild(g.firstChild);
+        /* Зупиняємо BUBBLE фазу на fieldGroup_ — після того як клітинки вже обробили подію.
+           Це блокує Blockly drag, але НЕ блокує доставку події до клітинок. */
+        ['mousedown','pointerdown','touchstart'].forEach(ev=>{
+            g.addEventListener(ev, e=>{ e.stopPropagation(); }, ev==='touchstart'?{passive:false}:false);
+        });
         const W=this.cW,H=this.cH,PW=36,C=this.CELL;
         this._svg('rect',{x:0,y:0,width:W+PW,height:H,fill:'#0a0f1a',rx:4},g);
         this._rects=[];
+        const cg=this._svg('g',{},g);
 
-        /* Один canvas замість 8000 SVG rect */
+        const _onDocMove = e => {
+            if(!this._p) return;
+            if(e.cancelable) e.preventDefault();
+            const t = e.touches[0];
+            const el = document.elementFromPoint(t.clientX, t.clientY);
+            if(el && el._paintIdx !== undefined) this._dot(el._paintIdx, el);
+        };
+        const _onDocEnd = (e) => {
+            this._p = false;
+            this._docListening = false;
+            document.removeEventListener('touchmove', _onDocMove, {capture:true, passive:false});
+            document.removeEventListener('touchend',  _onDocEnd,  false);
+            /* Скидаємо gesture Blockly тільки якщо він завис (немає активного drag блоку) */
+            try {
+                const ws = window.workspace || Blockly.getMainWorkspace();
+                const g = ws && ws.currentGesture_;
+                if(g && !g.isDraggingBlock_) g.cancel();
+            } catch(_) {}
+        };
+
+        for(let r=0;r<this.rows;r++) for(let c=0;c<this.cols;c++){
+            const idx=r*this.cols+c;
+            const rc=this._svg('rect',{
+                x:c*C+.5, y:r*C+.5, width:C-1, height:C-1,
+                fill:this._cellColor(idx),
+                rx:C>8?2:1,
+                style:'cursor:crosshair;touch-action:none'
+            }, cg);
+            /* Зберігаємо індекс на елементі для touchmove */
+            rc._paintIdx = idx;
+            const startDraw = e => {
+                if(e.cancelable) e.preventDefault();
+                this._p = true;
+                this._e = this.pixels[idx] === 1;
+                this._dot(idx, rc);
+            };
+            /* Тільки ЛКМ (button===0) */
+            rc.addEventListener('mousedown', e => {
+                if (e.button !== 0) return;
+                e.preventDefault(); e.stopPropagation();
+                this._p = true;
+                this._e = this.pixels[idx] === 1;
+                this._dot(idx, rc);
+            });
+            /* mouseenter: малюємо лише якщо LMB справді затиснута */
+            rc.addEventListener('mouseenter', e => {
+                if (!(e.buttons & 1)) { this._p = false; return; }
+                if (this._p) this._dot(idx, rc);
+            });
+            rc.addEventListener('touchstart', e => {
+                if(e.cancelable) e.preventDefault();
+                try{const ws=window.workspace||Blockly.getMainWorkspace();const gg=ws&&ws.currentGesture_;if(gg)gg.cancel();}catch(_){}
+                this._p=true; this._e=this.pixels[idx]===1; this._dot(idx,rc);
+                if(!this._docListening){
+                    this._docListening=true;
+                    document.addEventListener('touchmove',this._onDocMove,{capture:true,passive:false});
+                    document.addEventListener('touchend', this._onDocEnd, false);
+                }
+            },{passive:false});
+            this._rects.push(rc);
+        }
+        document.addEventListener('mouseup', () => { this._p = false; });
+        document.addEventListener('visibilitychange', () => { this._p = false; });
+        /* Сітка */
+        for(let r=0;r<=this.rows;r++) this._svg('line',{x1:0,y1:r*C,x2:W,y2:r*C,stroke:'#1e3a5f','stroke-width':'0.4'},g);
+        for(let c=0;c<=this.cols;c++) this._svg('line',{x1:c*C,y1:0,x2:c*C,y2:H,stroke:'#1e3a5f','stroke-width':'0.4'},g);
+
+        document.addEventListener('mouseup',()=>{ this._p=false; });
+        document.addEventListener('visibilitychange',()=>{ this._p=false; });
+        for(let r=0;r<=this.rows;r++) this._svg('line',{x1:0,y1:r*this.CELL,x2:this.cW,y2:r*this.CELL,stroke:'#1e3a5f','stroke-width':'0.4'},g);
+        for(let c=0;c<=this.cols;c++) this._svg('line',{x1:c*this.CELL,y1:0,x2:c*this.CELL,y2:this.cH,stroke:'#1e3a5f','stroke-width':'0.4'},g);
+        this._buildUI(g);
+    }
+
+    _buildCanvas(){
+        const g=this.fieldGroup_; while(g.firstChild)g.removeChild(g.firstChild);
+        const W=this.cW,H=this.cH,C=this.CELL;
+        this._svg('rect',{x:0,y:0,width:W+36,height:H,fill:'#0a0f1a',rx:4},g);
+        this._rects=[];
         const fo=document.createElementNS('http://www.w3.org/2000/svg','foreignObject');
-        fo.setAttribute('x','0'); fo.setAttribute('y','0');
-        fo.setAttribute('width',String(W)); fo.setAttribute('height',String(H));
+        fo.setAttribute('x','0');fo.setAttribute('y','0');fo.setAttribute('width',String(W));fo.setAttribute('height',String(H));
         g.appendChild(fo);
         const cv=document.createElement('canvas');
-        cv.width=W; cv.height=H;
+        cv.width=W;cv.height=H;
         cv.style.cssText='display:block;width:'+W+'px;height:'+H+'px;touch-action:none;cursor:crosshair;';
         fo.appendChild(cv);
-        this._cv=cv; this._ctx=cv.getContext('2d');
-        this._redrawAll();
-
-        /* Координата → індекс */
+        this._cv=cv;this._ctx=cv.getContext('2d');this._redrawAll();
         const _idx=(cx,cy)=>{
             const r=cv.getBoundingClientRect();
             if(!r.width||!r.height) return -1;
@@ -286,62 +328,31 @@ class FieldPaintGrid extends Blockly.Field {
             return row*this.cols+col;
         };
         const _dot=(idx)=>{
-            if(idx<0) return;
+            if(idx<0)return;
             const v=this._e?0:1;
-            if(this.pixels[idx]===v) return;
-            this.pixels[idx]=v;
-            this._redrawCell(idx);
-            this.value_=this._ser();
+            if(this.pixels[idx]===v)return;
+            this.pixels[idx]=v;this._redrawCell(idx);this.value_=this._ser();
         };
-
-        /* Mouse — SVG rect поверх canvas, бо Blockly перехоплює мишу до foreignObject */
-        const mRect=this._svg('rect',{x:'0',y:'0',width:String(W),height:String(H),
-            fill:'rgba(0,0,0,0.001)',style:'cursor:crosshair'},g);
-        const _svgIdx=(cx,cy)=>{
-            try{
-                const pt=mRect.ownerSVGElement.createSVGPoint();
-                pt.x=cx; pt.y=cy;
-                const l=pt.matrixTransform(mRect.getScreenCTM().inverse());
-                const col=Math.floor(l.x/C),row=Math.floor(l.y/C);
-                if(col>=0&&col<this.cols&&row>=0&&row<this.rows) return row*this.cols+col;
-            }catch(_){}
-            return _idx(cx,cy);
-        };
-        let _md=false;
-        mRect.addEventListener('mousedown',e=>{
-            if(e.button!==0) return;
-            e.preventDefault(); e.stopPropagation();
-            _md=true;
-            const i=_svgIdx(e.clientX,e.clientY);
-            this._e=i>=0?this.pixels[i]===1:false;
-            _dot(i);
-        });
-        mRect.addEventListener('mousemove',e=>{ if(!_md) return; _dot(_svgIdx(e.clientX,e.clientY)); });
-        mRect.addEventListener('mouseup',   ()=>{ _md=false; });
-        mRect.addEventListener('mouseleave',()=>{ _md=false; });
-        document.addEventListener('mouseup',()=>{ _md=false; });
-
-        /* Touch */
         let _td=false;
         cv.addEventListener('touchstart',e=>{
-            if(e.cancelable) e.preventDefault();
-            try{ const ws=window.workspace||Blockly.getMainWorkspace(); const gg=ws&&ws.currentGesture_; if(gg)gg.cancel(); }catch(_){}
-            _td=true;
-            const t=e.touches[0], i=_idx(t.clientX,t.clientY);
-            this._e=i>=0?this.pixels[i]===1:false;
-            _dot(i);
+            if(e.cancelable)e.preventDefault();
+            try{const ws=window.workspace||Blockly.getMainWorkspace();const gg=ws&&ws.currentGesture_;if(gg)gg.cancel();}catch(_){}
+            _td=true;const t=e.touches[0],i=_idx(t.clientX,t.clientY);
+            this._e=i>=0?this.pixels[i]===1:false;_dot(i);
         },{passive:false});
         cv.addEventListener('touchmove',e=>{
-            if(!_td) return;
-            if(e.cancelable) e.preventDefault();
-            const t=e.touches[0]; _dot(_idx(t.clientX,t.clientY));
+            if(!_td)return;if(e.cancelable)e.preventDefault();
+            const t=e.touches[0];_dot(_idx(t.clientX,t.clientY));
         },{passive:false});
-        cv.addEventListener('touchend',  ()=>{ _td=false; });
-        cv.addEventListener('touchcancel',()=>{ _td=false; });
-
-        /* Сітка SVG поверх canvas */
+        cv.addEventListener('touchend',()=>{_td=false;});
+        cv.addEventListener('touchcancel',()=>{_td=false;});
         for(let r=0;r<=this.rows;r++) this._svg('line',{x1:0,y1:r*C,x2:W,y2:r*C,stroke:'#1e3a5f','stroke-width':'0.3','pointer-events':'none'},g);
         for(let c=0;c<=this.cols;c++) this._svg('line',{x1:c*C,y1:0,x2:c*C,y2:H,stroke:'#1e3a5f','stroke-width':'0.3','pointer-events':'none'},g);
+        this._buildUI(g);
+    }
+
+    _buildUI(g){
+        const W=this.cW,H=this.cH,PW=36,C=this.CELL;
         /* Шкала */
         this._svg('rect',{x:W,y:0,width:PW,height:H,fill:'#060c17'},g);
         [1,2,4,8].forEach((s,i)=>{
@@ -360,9 +371,9 @@ class FieldPaintGrid extends Blockly.Field {
             const t=this._svg('text',{x:x+w/2,y:H+12,'text-anchor':'middle',fill:'#94a3b8','font-size':'8','font-family':'sans-serif'},g);
             t.textContent=lbl; b.addEventListener('click',fn); t.addEventListener('click',fn);
         };
-        btnR(0,56,'🗑 очистити',()=>{this.pixels.fill(0);this._redrawAll();this.value_=this._ser();});
-        btnR(59,38,'█ залити',()=>{this.pixels.fill(1);this._redrawAll();this.value_=this._ser();});
-        btnR(100,W-100+PW,'↺ інверт',()=>{for(let i=0;i<this.pixels.length;i++)this.pixels[i]=this.pixels[i]?0:1;this._redrawAll();this.value_=this._ser();});
+        btnR(0,56,'🗑 очистити',()=>{this.pixels.fill(0);this._refreshAll();this.value_=this._ser();});
+        btnR(59,38,'█ залити',()=>{this.pixels.fill(1);this._refreshAll();this.value_=this._ser();});
+        btnR(100,W-100+PW,'↺ інверт',()=>{for(let i=0;i<this.pixels.length;i++)this.pixels[i]=this.pixels[i]?0:1;this._refreshAll();this.value_=this._ser();});
 
         /* ── Рядок 2: фото-трасування ── */
         const self=this;
@@ -395,39 +406,46 @@ class FieldPaintGrid extends Blockly.Field {
             self._rects.forEach((_,i)=>self._rects[i].setAttribute('fill',self._cellColor(i)));
             self.value_=self._ser();
         },'#162e1e');
+
         this.size_.width=W+PW+2; this.size_.height=H+50;
     }
+
+    _refreshAll(){
+        if(this._isTouch) this._redrawAll();
+        else if(this._rects) this._rects.forEach((r,i)=>r.setAttribute('fill',this._cellColor(i)));
+    }
+
     _cellColor(idx){
         if(this.pixels[idx]) return '#c7d2fe';
         if(this._onion&&this._onion[idx]) return '#2d3f6e';
         return '#1e2d45';
     }
-
     _redrawCell(idx){
-        const ctx=this._ctx; if(!ctx) return;
-        const C=this.CELL, col=idx%this.cols, row=Math.floor(idx/this.cols);
-        const x=col*C, y=row*C, rr=C>8?2:1;
+        const ctx=this._ctx;if(!ctx)return;
+        const C=this.CELL,col=idx%this.cols,row=Math.floor(idx/this.cols);
+        const x=col*C,y=row*C,rr=C>8?2:1;
         ctx.fillStyle=this._cellColor(idx);
-        if(rr>1){
-            ctx.beginPath();
-            ctx.moveTo(x+rr,y); ctx.lineTo(x+C-rr,y); ctx.arcTo(x+C,y,x+C,y+rr,rr);
-            ctx.lineTo(x+C,y+C-rr); ctx.arcTo(x+C,y+C,x+C-rr,y+C,rr);
-            ctx.lineTo(x+rr,y+C); ctx.arcTo(x,y+C,x,y+C-rr,rr);
-            ctx.lineTo(x,y+rr); ctx.arcTo(x,y,x+rr,y,rr);
-            ctx.closePath(); ctx.fill();
-        } else { ctx.fillRect(x,y,C,C); }
+        if(rr>1){ctx.beginPath();ctx.moveTo(x+rr,y);ctx.lineTo(x+C-rr,y);ctx.arcTo(x+C,y,x+C,y+rr,rr);ctx.lineTo(x+C,y+C-rr);ctx.arcTo(x+C,y+C,x+C-rr,y+C,rr);ctx.lineTo(x+rr,y+C);ctx.arcTo(x,y+C,x,y+C-rr,rr);ctx.lineTo(x,y+rr);ctx.arcTo(x,y,x+rr,y,rr);ctx.closePath();ctx.fill();}
+        else{ctx.fillRect(x,y,C,C);}
+    }
+    _redrawAll(){
+        const ctx=this._ctx;if(!ctx)return;
+        ctx.fillStyle='#0a0f1a';ctx.fillRect(0,0,this._cv.width,this._cv.height);
+        for(let i=0;i<this.pixels.length;i++)this._redrawCell(i);
     }
 
-    _redrawAll(){
-        const ctx=this._ctx; if(!ctx) return;
-        ctx.fillStyle='#0a0f1a';
-        ctx.fillRect(0,0,this._cv.width,this._cv.height);
-        for(let i=0;i<this.pixels.length;i++) this._redrawCell(i);
+    _dot(idx,rc){
+        const v=this._e?0:1;
+        this.pixels[idx]=v;
+        rc.setAttribute('fill',this._cellColor(idx));
+        this.value_=this._ser();
     }
+
+
 
     setOnionSkin(pixels){
         this._onion=pixels?new Uint8Array(pixels):null;
-        this._redrawAll();
+        this._refreshAll();
     }
     _scale(s){
         const op=this.pixels.slice(),oC=this.cols,oR=this.rows;
@@ -505,7 +523,7 @@ class FieldPaintGrid extends Blockly.Field {
             canvas.addEventListener('touchstart',onD,{passive:false});canvas.addEventListener('touchmove',onM,{passive:false});canvas.addEventListener('touchend',onU);
             const crop=()=>{const off=document.createElement('canvas');off.width=self.cols;off.height=self.rows;const oc=off.getContext('2d');const sx=img.width/cW,sy=img.height/cH;oc.drawImage(img,rX*sx,rY*sy,rW*sx,rH*sy,0,0,self.cols,self.rows);return oc.getImageData(0,0,self.cols,self.rows);};
             btnOvl.onclick=()=>{const off=document.createElement('canvas');off.width=self.cols;off.height=self.rows;const oc=off.getContext('2d');const sx=img.width/cW,sy=img.height/cH;oc.drawImage(img,rX*sx,rY*sy,rW*sx,rH*sy,0,0,self.cols,self.rows);self._imgDataUrl=off.toDataURL();self._imgCropData=crop();if(self._overlayImg){self._overlayImg.setAttribute('href',self._imgDataUrl);self._overlayImg.setAttribute('opacity',self._imgOpacity);self._overlayImg.style.display='';}modal.remove();};
-            btnCnv.onclick=()=>{const id=crop();const thr=parseInt(slider.value)||128;for(let r=0;r<self.rows;r++)for(let c2=0;c2<self.cols;c2++){const i4=(r*self.cols+c2)*4,br=id.data[i4]*.299+id.data[i4+1]*.587+id.data[i4+2]*.114;self.pixels[r*self.cols+c2]=br<thr?1:0;}self._imgCropData={data:id.data,cw:self.cols,ch:self.rows};self._redrawAll();self.value_=self._ser();modal.remove();};
+            btnCnv.onclick=()=>{const id=crop();const thr=parseInt(slider.value)||128;for(let r=0;r<self.rows;r++)for(let c2=0;c2<self.cols;c2++){const i4=(r*self.cols+c2)*4,br=id.data[i4]*.299+id.data[i4+1]*.587+id.data[i4+2]*.114;self.pixels[r*self.cols+c2]=br<thr?1:0;}self._imgCropData={data:id.data,cw:self.cols,ch:self.rows};self._rects.forEach((_,i)=>self._rects[i].setAttribute('fill',self._cellColor(i)));self.value_=self._ser();modal.remove();};
         };img.src=dataUrl;
     }
 }
