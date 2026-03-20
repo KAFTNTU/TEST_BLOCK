@@ -294,21 +294,48 @@ class FieldPaintGrid extends Blockly.Field {
             this.value_=this._ser();
         };
 
-        /* Mouse */
+        /* ── MOUSE: SVG overlay rect поверх canvas (ПК) ──
+           foreignObject canvas не отримує mousedown від Blockly SVG,
+           тому для миші використовуємо SVG rect що перекриває полотно */
+        const svgHit = this._svg('rect',{
+            x:'0', y:'0', width:String(W), height:String(H),
+            fill:'rgba(0,0,0,0.001)',
+            style:'cursor:crosshair'
+        }, g);
+
+        /* SVG координати → індекс клітинки */
+        const _svgIdx=(clientX,clientY)=>{
+            try{
+                const svg=svgHit.ownerSVGElement;
+                const pt=svg.createSVGPoint();
+                pt.x=clientX; pt.y=clientY;
+                const local=pt.matrixTransform(svgHit.getScreenCTM().inverse());
+                const col=Math.floor(local.x/C), row=Math.floor(local.y/C);
+                if(col>=0&&col<this.cols&&row>=0&&row<this.rows)
+                    return row*this.cols+col;
+            }catch(_){}
+            return _idx(clientX,clientY); /* fallback */
+        };
+
         let _md=false;
-        cv.addEventListener('mousedown',e=>{
+        svgHit.addEventListener('mousedown',e=>{
             if(e.button!==0) return;
-            e.preventDefault();
+            e.preventDefault(); e.stopPropagation();
             _md=true;
-            const i=_idx(e.clientX,e.clientY);
+            const i=_svgIdx(e.clientX,e.clientY);
             this._e=i>=0?this.pixels[i]===1:false;
             _dot(i);
         });
-        cv.addEventListener('mousemove',e=>{ if(!_md) return; _dot(_idx(e.clientX,e.clientY)); });
-        cv.addEventListener('mouseup',  ()=>{ _md=false; });
-        cv.addEventListener('mouseleave',()=>{ _md=false; });
+        svgHit.addEventListener('mousemove',e=>{
+            if(!_md) return;
+            _dot(_svgIdx(e.clientX,e.clientY));
+        });
+        svgHit.addEventListener('mouseup',  ()=>{ _md=false; });
+        svgHit.addEventListener('mouseleave',()=>{ _md=false; });
+        document.addEventListener('mouseup', ()=>{ _md=false; });
 
-        /* Touch */
+        /* ── TOUCH: canvas listeners (телефон) ──
+           Touch events на canvas в foreignObject працюють добре */
         let _td=false;
         cv.addEventListener('touchstart',e=>{
             if(e.cancelable) e.preventDefault();
