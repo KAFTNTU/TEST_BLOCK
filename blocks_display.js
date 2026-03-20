@@ -259,96 +259,76 @@ class FieldPaintGrid extends Blockly.Field {
     }
     _svg(t,a,p){ const e=document.createElementNS('http://www.w3.org/2000/svg',t); Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v)); p.appendChild(e); return e; }
     _build(){
-        /* Знімаємо старі document listeners щоб не накопичувались після _scale() */
-        if(this._onDocMove) document.removeEventListener('touchmove', this._onDocMove, {capture:true, passive:false});
-        if(this._onDocEnd)  document.removeEventListener('touchend',  this._onDocEnd,  false);
-        this._p = false;
-        this._docListening = false;
-
         const g=this.fieldGroup_; while(g.firstChild)g.removeChild(g.firstChild);
-        /* Нічого зайвого на fieldGroup_ не вішаємо */
         const W=this.cW,H=this.cH,PW=36,C=this.CELL;
         this._svg('rect',{x:0,y:0,width:W+PW,height:H,fill:'#0a0f1a',rx:4},g);
         this._rects=[];
-        const cg=this._svg('g',{},g);
 
-        this._onDocMove = e => {
-            if(!this._p) return;
-            if(e.cancelable) e.preventDefault();
-            const t = e.touches[0];
-            const el = document.elementFromPoint(t.clientX, t.clientY);
-            if(el && el._paintIdx !== undefined) this._dot(el._paintIdx, el);
+        /* Один canvas замість 8000 SVG rect */
+        const fo=document.createElementNS('http://www.w3.org/2000/svg','foreignObject');
+        fo.setAttribute('x','0'); fo.setAttribute('y','0');
+        fo.setAttribute('width',String(W)); fo.setAttribute('height',String(H));
+        g.appendChild(fo);
+        const cv=document.createElement('canvas');
+        cv.width=W; cv.height=H;
+        cv.style.cssText='display:block;width:'+W+'px;height:'+H+'px;touch-action:none;cursor:crosshair;';
+        fo.appendChild(cv);
+        this._cv=cv; this._ctx=cv.getContext('2d');
+        this._redrawAll();
+
+        /* Координата → індекс */
+        const _idx=(cx,cy)=>{
+            const r=cv.getBoundingClientRect();
+            if(!r.width||!r.height) return -1;
+            const col=Math.floor((cx-r.left)*(W/r.width)/C);
+            const row=Math.floor((cy-r.top)*(H/r.height)/C);
+            if(col<0||col>=this.cols||row<0||row>=this.rows) return -1;
+            return row*this.cols+col;
         };
-        this._onDocEnd = (e) => {
-            this._p = false;
-            this._docListening = false;
-            document.removeEventListener('touchmove', this._onDocMove, {capture:true, passive:false});
-            document.removeEventListener('touchend',  this._onDocEnd,  false);
-            try {
-                const ws = window.workspace || Blockly.getMainWorkspace();
-                const gg = ws && ws.currentGesture_;
-                if(gg && !gg.isDraggingBlock_) gg.cancel();
-            } catch(_) {}
+        const _dot=(idx)=>{
+            if(idx<0) return;
+            const v=this._e?0:1;
+            if(this.pixels[idx]===v) return;
+            this.pixels[idx]=v;
+            this._redrawCell(idx);
+            this.value_=this._ser();
         };
 
-        for(let r=0;r<this.rows;r++) for(let c=0;c<this.cols;c++){
-            const idx=r*this.cols+c;
-            const rc=this._svg('rect',{
-                x:c*C+.5, y:r*C+.5, width:C-1, height:C-1,
-                fill:this._cellColor(idx),
-                rx:C>8?2:1,
-                style:'cursor:crosshair;touch-action:none'
-            }, cg);
-            /* Зберігаємо індекс на елементі для touchmove */
-            rc._paintIdx = idx;
-            const startDraw = e => {
-                if(e.cancelable) e.preventDefault();
-                this._p = true;
-                this._e = this.pixels[idx] === 1;
-                this._dot(idx, rc);
-            };
-            /* mousedown на клітинці — починаємо малювання */
-            rc.addEventListener('mousedown', e => {
-                if (e.button !== 0) return;
-                e.preventDefault(); e.stopPropagation();
-                this._p = true;
-                this._e = this.pixels[idx] === 1;
-                this._dot(idx, rc);
-            });
-            rc.addEventListener('touchstart', e => {
-                if(e.cancelable) e.preventDefault();
-                /* Скасовуємо gesture Blockly — ми в зоні малювання */
-                try {
-                    const ws = window.workspace || Blockly.getMainWorkspace();
-                    const gg = ws && ws.currentGesture_;
-                    if(gg) gg.cancel();
-                } catch(_) {}
-                this._p = true;
-                this._e = this.pixels[idx] === 1;
-                this._dot(idx, rc);
-                if(!this._docListening) {
-                    this._docListening = true;
-                    document.addEventListener('touchmove', this._onDocMove, {capture:true, passive:false});
-                    document.addEventListener('touchend',  this._onDocEnd,  false);
-                }
-            }, { passive:false });
-            this._rects.push(rc);
-        }
-        /* mousemove на рівні всієї сітки — без пропусків при швидкому русі */
-        cg.addEventListener('mousemove', e => {
-            if (!(e.buttons & 1)) { this._p = false; return; }
-            if (!this._p) return;
-            /* Знайти клітинку під курсором через _rects */
-            const el = e.target;
-            if (el && el._paintIdx !== undefined) {
-                this._dot(el._paintIdx, this._rects[el._paintIdx]);
-            }
+        /* Mouse */
+        let _md=false;
+        cv.addEventListener('mousedown',e=>{
+            if(e.button!==0) return;
+            e.preventDefault();
+            _md=true;
+            const i=_idx(e.clientX,e.clientY);
+            this._e=i>=0?this.pixels[i]===1:false;
+            _dot(i);
         });
-        document.addEventListener('mouseup', () => { this._p = false; });
-        document.addEventListener('visibilitychange', () => { this._p = false; });
-        /* Сітка */
-        for(let r=0;r<=this.rows;r++) this._svg('line',{x1:0,y1:r*C,x2:W,y2:r*C,stroke:'#1e3a5f','stroke-width':'0.4'},g);
-        for(let c=0;c<=this.cols;c++) this._svg('line',{x1:c*C,y1:0,x2:c*C,y2:H,stroke:'#1e3a5f','stroke-width':'0.4'},g);
+        cv.addEventListener('mousemove',e=>{ if(!_md) return; _dot(_idx(e.clientX,e.clientY)); });
+        cv.addEventListener('mouseup',  ()=>{ _md=false; });
+        cv.addEventListener('mouseleave',()=>{ _md=false; });
+
+        /* Touch */
+        let _td=false;
+        cv.addEventListener('touchstart',e=>{
+            if(e.cancelable) e.preventDefault();
+            try{ const ws=window.workspace||Blockly.getMainWorkspace(); const gg=ws&&ws.currentGesture_; if(gg)gg.cancel(); }catch(_){}
+            _td=true;
+            const t=e.touches[0], i=_idx(t.clientX,t.clientY);
+            this._e=i>=0?this.pixels[i]===1:false;
+            _dot(i);
+        },{passive:false});
+        cv.addEventListener('touchmove',e=>{
+            if(!_td) return;
+            if(e.cancelable) e.preventDefault();
+            const t=e.touches[0]; _dot(_idx(t.clientX,t.clientY));
+        },{passive:false});
+        cv.addEventListener('touchend',  ()=>{ _td=false; });
+        cv.addEventListener('touchcancel',()=>{ _td=false; });
+
+        /* Сітка SVG поверх canvas */
+        for(let r=0;r<=this.rows;r++) this._svg('line',{x1:0,y1:r*C,x2:W,y2:r*C,stroke:'#1e3a5f','stroke-width':'0.3','pointer-events':'none'},g);
+        for(let c=0;c<=this.cols;c++) this._svg('line',{x1:c*C,y1:0,x2:c*C,y2:H,stroke:'#1e3a5f','stroke-width':'0.3','pointer-events':'none'},g);
         /* Шкала */
         this._svg('rect',{x:W,y:0,width:PW,height:H,fill:'#060c17'},g);
         [1,2,4,8].forEach((s,i)=>{
@@ -367,9 +347,9 @@ class FieldPaintGrid extends Blockly.Field {
             const t=this._svg('text',{x:x+w/2,y:H+12,'text-anchor':'middle',fill:'#94a3b8','font-size':'8','font-family':'sans-serif'},g);
             t.textContent=lbl; b.addEventListener('click',fn); t.addEventListener('click',fn);
         };
-        btnR(0,56,'🗑 очистити',()=>{this.pixels.fill(0);this._rects.forEach((r,i)=>r.setAttribute('fill',this._cellColor(i)));this.value_=this._ser();});
-        btnR(59,38,'█ залити',()=>{this.pixels.fill(1);this._rects.forEach((r,i)=>r.setAttribute('fill',this._cellColor(i)));this.value_=this._ser();});
-        btnR(100,W-100+PW,'↺ інверт',()=>{for(let i=0;i<this.pixels.length;i++){this.pixels[i]=this.pixels[i]?0:1;this._rects[i].setAttribute('fill',this._cellColor(i));}this.value_=this._ser();});
+        btnR(0,56,'🗑 очистити',()=>{this.pixels.fill(0);this._redrawAll();this.value_=this._ser();});
+        btnR(59,38,'█ залити',()=>{this.pixels.fill(1);this._redrawAll();this.value_=this._ser();});
+        btnR(100,W-100+PW,'↺ інверт',()=>{for(let i=0;i<this.pixels.length;i++)this.pixels[i]=this.pixels[i]?0:1;this._redrawAll();this.value_=this._ser();});
 
         /* ── Рядок 2: фото-трасування ── */
         const self=this;
@@ -404,28 +384,37 @@ class FieldPaintGrid extends Blockly.Field {
         },'#162e1e');
         this.size_.width=W+PW+2; this.size_.height=H+50;
     }
-    _dot(idx,rc){
-        const v=this._e?0:1;
-        this.pixels[idx]=v;
-        rc.setAttribute('fill',this._cellColor(idx));
-        this.value_=this._ser();
-    }
-
-    /* Колір клітинки з урахуванням onion-skin */
     _cellColor(idx){
-        if(this.pixels[idx]) return '#c7d2fe'; /* власний піксель — яскраво */
-        if(this._onion && this._onion[idx]) return '#2d3f6e'; /* onion ghost — темно-синій */
-        return '#1e2d45'; /* порожньо */
+        if(this.pixels[idx]) return '#c7d2fe';
+        if(this._onion&&this._onion[idx]) return '#2d3f6e';
+        return '#1e2d45';
     }
 
-    /* Встановити onion-skin (пікселі попереднього кадру) */
+    _redrawCell(idx){
+        const ctx=this._ctx; if(!ctx) return;
+        const C=this.CELL, col=idx%this.cols, row=Math.floor(idx/this.cols);
+        const x=col*C, y=row*C, rr=C>8?2:1;
+        ctx.fillStyle=this._cellColor(idx);
+        if(rr>1){
+            ctx.beginPath();
+            ctx.moveTo(x+rr,y); ctx.lineTo(x+C-rr,y); ctx.arcTo(x+C,y,x+C,y+rr,rr);
+            ctx.lineTo(x+C,y+C-rr); ctx.arcTo(x+C,y+C,x+C-rr,y+C,rr);
+            ctx.lineTo(x+rr,y+C); ctx.arcTo(x,y+C,x,y+C-rr,rr);
+            ctx.lineTo(x,y+rr); ctx.arcTo(x,y,x+rr,y,rr);
+            ctx.closePath(); ctx.fill();
+        } else { ctx.fillRect(x,y,C,C); }
+    }
+
+    _redrawAll(){
+        const ctx=this._ctx; if(!ctx) return;
+        ctx.fillStyle='#0a0f1a';
+        ctx.fillRect(0,0,this._cv.width,this._cv.height);
+        for(let i=0;i<this.pixels.length;i++) this._redrawCell(i);
+    }
+
     setOnionSkin(pixels){
-        this._onion = pixels ? new Uint8Array(pixels) : null;
-        /* Оновити кольори всіх клітинок */
-        if(this._rects){
-            for(let i=0;i<this._rects.length;i++)
-                this._rects[i].setAttribute('fill', this._cellColor(i));
-        }
+        this._onion=pixels?new Uint8Array(pixels):null;
+        this._redrawAll();
     }
     _scale(s){
         const op=this.pixels.slice(),oC=this.cols,oR=this.rows;
@@ -503,7 +492,7 @@ class FieldPaintGrid extends Blockly.Field {
             canvas.addEventListener('touchstart',onD,{passive:false});canvas.addEventListener('touchmove',onM,{passive:false});canvas.addEventListener('touchend',onU);
             const crop=()=>{const off=document.createElement('canvas');off.width=self.cols;off.height=self.rows;const oc=off.getContext('2d');const sx=img.width/cW,sy=img.height/cH;oc.drawImage(img,rX*sx,rY*sy,rW*sx,rH*sy,0,0,self.cols,self.rows);return oc.getImageData(0,0,self.cols,self.rows);};
             btnOvl.onclick=()=>{const off=document.createElement('canvas');off.width=self.cols;off.height=self.rows;const oc=off.getContext('2d');const sx=img.width/cW,sy=img.height/cH;oc.drawImage(img,rX*sx,rY*sy,rW*sx,rH*sy,0,0,self.cols,self.rows);self._imgDataUrl=off.toDataURL();self._imgCropData=crop();if(self._overlayImg){self._overlayImg.setAttribute('href',self._imgDataUrl);self._overlayImg.setAttribute('opacity',self._imgOpacity);self._overlayImg.style.display='';}modal.remove();};
-            btnCnv.onclick=()=>{const id=crop();const thr=parseInt(slider.value)||128;for(let r=0;r<self.rows;r++)for(let c2=0;c2<self.cols;c2++){const i4=(r*self.cols+c2)*4,br=id.data[i4]*.299+id.data[i4+1]*.587+id.data[i4+2]*.114;self.pixels[r*self.cols+c2]=br<thr?1:0;}self._imgCropData={data:id.data,cw:self.cols,ch:self.rows};self._rects.forEach((_,i)=>self._rects[i].setAttribute('fill',self._cellColor(i)));self.value_=self._ser();modal.remove();};
+            btnCnv.onclick=()=>{const id=crop();const thr=parseInt(slider.value)||128;for(let r=0;r<self.rows;r++)for(let c2=0;c2<self.cols;c2++){const i4=(r*self.cols+c2)*4,br=id.data[i4]*.299+id.data[i4+1]*.587+id.data[i4+2]*.114;self.pixels[r*self.cols+c2]=br<thr?1:0;}self._imgCropData={data:id.data,cw:self.cols,ch:self.rows};self._redrawAll();self.value_=self._ser();modal.remove();};
         };img.src=dataUrl;
     }
 }
